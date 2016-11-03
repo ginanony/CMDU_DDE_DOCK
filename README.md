@@ -1,4 +1,4 @@
 # CMDU_DDE_DOCK
-<div align=center>
+<center>
 ![image](https://github.com/sonichy/CMDU_DDE_DOCK/blob/master/preview.png)
-</div>
+</center>

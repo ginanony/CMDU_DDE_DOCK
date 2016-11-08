@@ -77,7 +77,7 @@ QString m(int k){
             g.sprintf("%06.2fKB",k/1024.0);
         }else{
             //g=QString::number(k/1.0,'f',2)+"B";
-            g.sprintf("%06.2fB",k/1.0);
+            g.sprintf("%06.2f B",k/1.0);
         }
     }
     return g;
@@ -89,15 +89,15 @@ void MyPlugin::updateString()
     QLabel *label = (QLabel *)m_mainWidget;
     label->setText(currentDateTime.toString("HH:mm:ss"));
 
-    QFile file2("/proc/uptime");
-    file2.open(QIODevice::ReadOnly);
-    QString l=file2.readLine();
-    file2.close();
+    QFile file("/proc/uptime");
+    file.open(QIODevice::ReadOnly);
+    QString l=file.readLine();
+    file.close();
     QTime t(0,0,0);
     t=t.addSecs(l.left(l.indexOf(".")).toInt());
     QString uptime="开机: "+t.toString("hh:mm:ss");
     
-    QFile file("/proc/meminfo");
+    file.setFileName("/proc/meminfo");
     file.open(QIODevice::ReadOnly);
     l=file.readLine();
     long int mt =l.mid(l.indexOf(":")+1,l.length()-13).replace(" ","").toInt();
@@ -108,9 +108,9 @@ void MyPlugin::updateString()
     QString musage=QString::number(mu*100/mt)+"%";
     QString mem="\n内存: "+QString("%1/%2=%3").arg(g(mu)).arg(g(mt)).arg(musage);
 
-    QFile file3("/proc/stat");
-    file3.open(QIODevice::ReadOnly);
-    l=file3.readLine();
+    file.setFileName("/proc/stat");
+    file.open(QIODevice::ReadOnly);
+    l=file.readLine();
     QByteArray ba;
     //ba = l.toAscii();
     ba=l.toLatin1();
@@ -120,19 +120,19 @@ void MyPlugin::updateString()
     long int user,nice,sys,idle,iowait,irq,softirq,tt;
     sscanf(ch,"%s%ld%ld%ld%ld%ld%ld%ld",cpu,&user,&nice,&sys,&idle,&iowait,&irq,&softirq);
     tt=user+nice+sys+idle+iowait+irq+softirq;
-    file3.close();
+    file.close();
     QString cusage="";
     if(i>0)cusage="\nCPU: "+QString::number(((tt-tt0)-(idle-idle0))*100/(tt-tt0))+"%";
     idle0=idle;
     tt0=tt;
 
-    QFile file4("/proc/net/dev");
-    file4.open(QIODevice::ReadOnly);
-    l=file4.readLine();
-    l=file4.readLine();
-    l=file4.readLine();
-    //l=file4.readLine();
-    file4.close();
+    file.setFileName("/proc/net/dev");
+    file.open(QIODevice::ReadOnly);
+    l=file.readLine();
+    l=file.readLine();
+    l=file.readLine();
+    //l=file.readLine();
+    file.close();
     QStringList list=l.split(QRegExp("\\s{1,}")); // 第一个\表示转义字符，\s表示空格，｛1，｝表示一个以上
     QString dss="";
     QString uss="";

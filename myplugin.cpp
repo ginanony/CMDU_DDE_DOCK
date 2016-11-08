@@ -13,7 +13,7 @@ MyPlugin::MyPlugin(QObject *parent) :
     label->setText("↑000.00MB/s\n↓000.00MB/s");
     label->setStyleSheet("color:white;padding:0px;");
     //label->setAlignment(Qt::AlignRight);
-    //label->setFixedWidth(100);
+    label->setFixedWidth(75);
     m_tipsLabel->setStyleSheet("color:white;padding:5px;");
     m_refershTimer->setInterval(1000);
     m_refershTimer->start();

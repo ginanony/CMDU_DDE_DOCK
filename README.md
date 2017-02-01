@@ -1,5 +1,5 @@
 # CMDU_DDE_DOCK
-![alt](https://coding.net/u/sonichy/p/CMDU_DDE_DOCK/git/raw/master/preview.png)
+![alt](https://coding.net/u/sonichy/p/CMDU_DDE_DOCK/git/raw/master/preview.png)  
 深度Linux系统网速任务栏插件，鼠标悬浮显示开机时间、CPU使用率、内存使用率、下载字节、上传字节。  
 安装：install.sh  
 卸载：uninstall.sh  

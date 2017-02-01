@@ -1,16 +1,17 @@
 #include "myplugin.h"
 #include <QLabel>
+#include <QMessageBox>
 #define MYPLUGIN_KEY    "myplugin"
 long int i=0,db,ub,tt0=0,idle0=0;
 
 MyPlugin::MyPlugin(QObject *parent) :
     QObject(parent),
-    m_mainWidget(new QLabel),
+    m_mainWidget(new PluginWidget),
     m_tipsLabel(new QLabel),
     m_refershTimer(new QTimer(this))
 {
     QLabel *label = (QLabel *)m_mainWidget;
-    label->setText("↑000.00MB/s\n↓000.00MB/s");
+    label->setText("↑000.00 B/s\n↓000.00 B/s");
     label->setStyleSheet("color:white;padding:0px;");
     //label->setAlignment(Qt::AlignRight);
     label->setFixedWidth(75);
@@ -18,6 +19,7 @@ MyPlugin::MyPlugin(QObject *parent) :
     m_refershTimer->setInterval(1000);
     m_refershTimer->start();
     connect(m_refershTimer, &QTimer::timeout, this, &MyPlugin::updateString);
+    connect(m_mainWidget, &PluginWidget::requestContextMenu, this, &MyPlugin::requestContextMenu);
 }
 
 //插件名
@@ -51,38 +53,108 @@ QWidget *MyPlugin::itemTipsWidget(const QString &itemKey)
     return nullptr;
 }
 
-QString g(int k){
-    QString g;
-    if(k>999999){
-        g=QString::number(k/1048576.0,'f',2)+"GB";
-    }else{
-        if(k>999){
-            g=QString::number(k/1024.0,'f',2)+"MB";
-        }else{
-            g=QString::number(k/1.0,'f',2)+"KB";
-        }
-    }
-    return g;
+void MBAbout(){    
+    QMessageBox aboutMB(QMessageBox::NoIcon, "系统信息 2.1", "关于\n\n深度Linux系统上一款在任务栏显示网速，鼠标悬浮显示开机时间、CPU占用、内存占用、下载字节、上传字节的插件。\n作者：黄颖\nE-mail: sonichy@163.com\n主页：sonichy.96.lt\n致谢：\nlinux028@deepin.org");
+    aboutMB.setIconPixmap(QPixmap(":/icon.png"));
+    aboutMB.exec();
 }
 
-QString m(int k){
-    QString g;
-    if(k>999999){
-        //g=QString::number(k/1048576.0,'f',2)+"MB";
-        //双引号里面是字符串，单引号里面是单个字符。
-        g.sprintf("%06.2fMB",k/1048576.0);
-    }else{
-        if(k>999){
-            //g=QString::number(k/1024.0,'f',2)+"KB";
-            g.sprintf("%06.2fKB",k/1024.0);
-        }else{
-            //g=QString::number(k/1.0,'f',2)+"B";
-            g.sprintf("%06.2f B",k/1.0);
-        }
-    }
-    return g;
+void MBHistory(){
+    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.1", "更新历史\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
+    historyMB.exec();
 }
 
+//点击响应
+const QString MyPlugin::itemCommand(const QString &itemKey)
+{
+    //Q_UNUSED(itemKey);
+    MBAbout();
+    return "";
+}
+
+//右键菜单
+const QString MyPlugin::itemContextMenu(const QString &itemKey)
+{
+    Q_UNUSED(itemKey);
+    QList<QVariant> items;
+    items.reserve(2);
+
+    QMap<QString, QVariant> about;
+    about["itemId"] = "about";
+    about["itemText"] = "关于";
+    about["isActive"] = true;
+    items.push_back(about);
+
+    QMap<QString, QVariant> history;
+    history["itemId"] = "history";
+    history["itemText"] = "更新历史";
+    history["isActive"] = true;
+    items.push_back(history);
+
+    QMap<QString, QVariant> menu;
+    menu["items"] = items;
+    menu["checkableMenu"] = false;
+    menu["singleCheck"] = false;
+    return QJsonDocument::fromVariant(menu).toJson();
+}
+
+void MyPlugin::invokedMenuItem(const QString &itemKey, const QString &menuId, const bool checked)
+{
+    Q_UNUSED(itemKey)
+    //Q_UNUSED(menuId)
+    Q_UNUSED(checked)
+
+    QStringList menuitems;
+    menuitems << "about" << "history";
+
+    switch(menuitems.indexOf(menuId)){
+    case 0:
+        MBAbout();
+        break;
+    case 1:
+        MBHistory();
+        break;
+    }
+}
+
+void MyPlugin::requestContextMenu(const QString &itemKey)
+{
+    m_proxyInter->requestContextMenu(this, itemKey);
+}
+
+QString KB(long k){
+    QString s="";
+    if(k>999999){
+        s=QString::number(k/(1024*1024.0),'f',2)+"GB";
+    }else{
+        if(k>999){
+            s=QString::number(k/1024.0,'f',2)+"MB";
+        }else{
+            s=QString::number(k/1.0,'f',2)+"KB";
+        }
+    }
+    return s;
+}
+
+QString BS(long b){
+    QString s="";
+    if(b>999999999){
+        s=QString::number(b/(1024*1024*1024.0),'f',2)+"GB";
+    }else{
+        if(b>999999){
+            s=QString::number(b/(1024*1024.0),'f',2)+"MB";
+        }else{
+            if(b>999){
+                s=QString::number(b/1024.0,'f',2)+"KB";
+            }else{
+                s=QString::number(b/1.0,'f',2)+"B";
+            }
+        }
+    }
+    return s;
+}
+
+//周期更新
 void MyPlugin::updateString()
 {
     const QDateTime currentDateTime = QDateTime::currentDateTime();
@@ -100,19 +172,18 @@ void MyPlugin::updateString()
     file.setFileName("/proc/meminfo");
     file.open(QIODevice::ReadOnly);
     l=file.readLine();
-    long int mt =l.mid(l.indexOf(":")+1,l.length()-13).replace(" ","").toInt();
+    long mt=l.mid(l.indexOf(":")+1,l.length()-13).replace(" ","").toInt();
     l=file.readLine();
     file.close();
-    long int mf =l.mid(l.indexOf(":")+1,l.length()-11).replace(" ","").toInt();
-    long int mu=mt-mf;
+    long mf=l.mid(l.indexOf(":")+1,l.length()-11).replace(" ","").toInt();
+    long mu=mt-mf;
     QString musage=QString::number(mu*100/mt)+"%";
-    QString mem="\n内存: "+QString("%1/%2=%3").arg(g(mu)).arg(g(mt)).arg(musage);
+    QString mem="\n内存: "+QString("%1/%2=%3").arg(KB(mu)).arg(KB(mt)).arg(musage);
 
     file.setFileName("/proc/stat");
     file.open(QIODevice::ReadOnly);
     l=file.readLine();
-    QByteArray ba;
-    //ba = l.toAscii();
+    QByteArray ba;    
     ba=l.toLatin1();
     const char *ch;
     ch=ba.constData();
@@ -139,12 +210,12 @@ void MyPlugin::updateString()
     if(i>0){
         long ds=list.at(1).toLong()-db;
         long us=list.at(9).toLong()-ub;
-        dss=m(ds)+"/s";
-        uss=m(us)+"/s";
+        dss=BS(ds)+"/s";
+        uss=BS(us)+"/s";
     }
     db=list.at(1).toLong();
     ub=list.at(9).toLong();
-    QString net="\n下载: "+m(list.at(1).toLong())+"  "+dss+"\n上传: "+m(list.at(9).toLong())+"  "+uss;
+    QString net="\n下载: "+BS(db)+"  "+dss+"\n上传: "+BS(ub)+"  "+uss;
     m_tipsLabel->setText(uptime+cusage+mem+net);
     label->setText("↑"+uss+"\n↓"+dss);
 

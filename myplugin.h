@@ -8,6 +8,7 @@
 #include "interfaces/pluginsiteminterface.h"
 #include "interfaces/pluginproxyinterface.h"
 
+#include "pluginwidget.h"
 
 class MyPlugin : public QObject, public PluginsItemInterface
 {
@@ -21,16 +22,18 @@ public:
     //Dock接口函数
     const QString pluginName() const;
     void init(PluginProxyInterface *proxyInter);
-    QWidget *itemWidget(const QString &itemKey);
-
-    //
+    QWidget *itemWidget(const QString &itemKey);    
     QWidget *itemTipsWidget(const QString &itemKey);
+    const QString itemCommand(const QString &itemKey) override;
+    const QString itemContextMenu(const QString &itemKey) override;
+    void invokedMenuItem(const QString &itemKey, const QString &menuId, const bool checked);
 
 private slots:
     void updateString();
+    void requestContextMenu(const QString &itemKey);
 
 private:
-    QWidget *m_mainWidget;
+    PluginWidget *m_mainWidget;
     QLabel *m_tipsLabel;
     QTimer *m_refershTimer;
 };

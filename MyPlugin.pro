@@ -6,13 +6,15 @@
 
 QT       += core gui widgets
 
-TARGET = MyPlugin
+TARGET = CMDU
 TEMPLATE = lib
 CONFIG += plugin c++11
 
-SOURCES += myplugin.cpp
+SOURCES += myplugin.cpp \
+    pluginwidget.cpp
 
-HEADERS += myplugin.h
+HEADERS += myplugin.h \
+    pluginwidget.h
 DISTFILES += MyPlugin.json
 
 INCLUDEPATH += ../dde-dock/
@@ -21,3 +23,6 @@ unix {
     target.path = /usr/lib/dde-dock/plugins/
     INSTALLS += target
 }
+
+RESOURCES += \
+    filename.qrc

@@ -1,9 +1,10 @@
 #include "myplugin.h"
 #include <QLabel>
 #include <QMessageBox>
+#include <QInputDialog>
 #define MYPLUGIN_KEY    "myplugin"
 long int i=0,db,ub,tt0=0,idle0=0;
-
+int nl=3;
 MyPlugin::MyPlugin(QObject *parent) :
     QObject(parent),
     m_mainWidget(new PluginWidget),
@@ -53,16 +54,28 @@ QWidget *MyPlugin::itemTipsWidget(const QString &itemKey)
     return nullptr;
 }
 
-void MBAbout(){    
-    QMessageBox aboutMB(QMessageBox::NoIcon, "系统信息 2.1", "关于\n\n深度Linux系统上一款在任务栏显示网速，鼠标悬浮显示开机时间、CPU占用、内存占用、下载字节、上传字节的插件。\n作者：黄颖\nE-mail: sonichy@163.com\n主页：sonichy.96.lt\n致谢：\nlinux028@deepin.org");
+void MBAbout()
+{
+    QMessageBox aboutMB(QMessageBox::NoIcon, "系统信息 2.２", "关于\n\n深度Linux系统上一款在任务栏显示网速，鼠标悬浮显示开机时间、CPU占用、内存占用、下载字节、上传字节的插件。\n作者：黄颖\nE-mail: sonichy@163.com\n主页：sonichy.96.lt\n致谢：\nlinux028@deepin.org");
     aboutMB.setIconPixmap(QPixmap(":/icon.png"));
     aboutMB.exec();
 }
 
-void MBHistory(){
-    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.1", "更新历史\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
+void MBHistory()
+{
+    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.２", "更新历史\n\n2.２ (2017-07-08)\n1.智能判断网速所在行。\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
     historyMB.exec();
 }
+
+//void setNetLine()
+//{
+//    bool ok;
+//    int ln= QInputDialog::getInt(NULL, "设置", "输入网速所在行", nl, 2, 4, 1, &ok);
+//    if(ok){
+//        nl=ln;
+//    }
+//    nl++;
+//}
 
 //点击响应
 const QString MyPlugin::itemCommand(const QString &itemKey)
@@ -199,9 +212,11 @@ void MyPlugin::updateString()
 
     file.setFileName("/proc/net/dev");
     file.open(QIODevice::ReadOnly);
-    l=file.readLine();
-    l=file.readLine();
-    l=file.readLine();
+    for(int j=1;j<nl;j++){
+        l=file.readLine();
+    }
+    //l=file.readLine();
+    //l=file.readLine();
     //l=file.readLine();
     file.close();
     QStringList list=l.split(QRegExp("\\s{1,}")); // 第一个\表示转义字符，\s表示空格，｛1，｝表示一个以上
@@ -209,7 +224,7 @@ void MyPlugin::updateString()
     QString uss="";
     if(i>0){
         long ds=list.at(1).toLong()-db;
-        long us=list.at(9).toLong()-ub;
+        long us=list.at(9).toLong()-ub;        
         dss=BS(ds)+"/s";
         uss=BS(us)+"/s";
     }
@@ -220,4 +235,6 @@ void MyPlugin::updateString()
     label->setText("↑"+uss+"\n↓"+dss);
 
     i++;
+    if(db==0)nl++;
+    if(nl>5)nl=3;
 }

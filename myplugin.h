@@ -28,6 +28,7 @@ public:
     const QString itemContextMenu(const QString &itemKey) override;
     void invokedMenuItem(const QString &itemKey, const QString &menuId, const bool checked);
 
+
 private slots:
     void updateString();
     void requestContextMenu(const QString &itemKey);
@@ -36,6 +37,7 @@ private:
     PluginWidget *m_mainWidget;
     QLabel *m_tipsLabel;
     QTimer *m_refershTimer;
+
 };
 
 #endif // MYPLUGIN_H

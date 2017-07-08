@@ -37,7 +37,7 @@ private:
     PluginWidget *m_mainWidget;
     QLabel *m_tipsLabel;
     QTimer *m_refershTimer;
-
+    void setNetLine();
 };
 
 #endif // MYPLUGIN_H

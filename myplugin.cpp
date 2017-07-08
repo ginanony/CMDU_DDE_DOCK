@@ -21,6 +21,7 @@ MyPlugin::MyPlugin(QObject *parent) :
     m_refershTimer->start();
     connect(m_refershTimer, &QTimer::timeout, this, &MyPlugin::updateString);
     connect(m_mainWidget, &PluginWidget::requestContextMenu, this, &MyPlugin::requestContextMenu);
+
 }
 
 //插件名
@@ -63,19 +64,29 @@ void MBAbout()
 
 void MBHistory()
 {
-    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.２", "更新历史\n\n2.２ (2017-07-08)\n1.智能判断网速所在行。\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
+    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.２", "更新历史\n\n2.２ (2017-07-08)\n1.设置网速所在行。\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
     historyMB.exec();
 }
 
-//void setNetLine()
-//{
-//    bool ok;
-//    int ln= QInputDialog::getInt(NULL, "设置", "输入网速所在行", nl, 2, 4, 1, &ok);
-//    if(ok){
-//        nl=ln;
-//    }
-//    nl++;
-//}
+void MyPlugin::setNetLine()
+{
+    int ntl=0;
+    QFile file1("/proc/net/dev");
+    file1.open(QIODevice::ReadOnly);
+    QTextStream TS(&file1);
+    while(!TS.atEnd()){
+        QString line = TS.readLine();
+        QMessageBox MB(QMessageBox::NoIcon, "系统信息 2.２", line);
+        MB.exec();
+        ntl++;
+    }
+    file1.close();
+    bool ok;
+    int ln= QInputDialog::getInt(NULL, "设置", "网速所在行", nl, 3, 9, 1, &ok);
+    if(ok){
+        nl=ln;
+    }
+}
 
 //点击响应
 const QString MyPlugin::itemCommand(const QString &itemKey)
@@ -90,7 +101,7 @@ const QString MyPlugin::itemContextMenu(const QString &itemKey)
 {
     Q_UNUSED(itemKey);
     QList<QVariant> items;
-    items.reserve(2);
+    items.reserve(3);
 
     QMap<QString, QVariant> about;
     about["itemId"] = "about";
@@ -103,6 +114,12 @@ const QString MyPlugin::itemContextMenu(const QString &itemKey)
     history["itemText"] = "更新历史";
     history["isActive"] = true;
     items.push_back(history);
+
+    QMap<QString, QVariant> netline;
+    netline["itemId"] = "netline";
+    netline["itemText"] = "设置";
+    netline["isActive"] = true;
+    items.push_back(netline);
 
     QMap<QString, QVariant> menu;
     menu["items"] = items;
@@ -118,7 +135,7 @@ void MyPlugin::invokedMenuItem(const QString &itemKey, const QString &menuId, co
     Q_UNUSED(checked)
 
     QStringList menuitems;
-    menuitems << "about" << "history";
+    menuitems << "about" << "history" << "netline";
 
     switch(menuitems.indexOf(menuId)){
     case 0:
@@ -126,6 +143,9 @@ void MyPlugin::invokedMenuItem(const QString &itemKey, const QString &menuId, co
         break;
     case 1:
         MBHistory();
+        break;
+    case 2:
+        setNetLine();
         break;
     }
 }
@@ -235,6 +255,6 @@ void MyPlugin::updateString()
     label->setText("↑"+uss+"\n↓"+dss);
 
     i++;
-    if(db==0)nl++;
-    if(nl>5)nl=3;
+//    if(db==0)nl++;
+//    if(nl>5)nl=3;
 }

@@ -232,7 +232,7 @@ void MyPlugin::updateString()
 
     file.setFileName("/proc/net/dev");
     file.open(QIODevice::ReadOnly);
-    for(int j=1;j<nl;j++){
+    for(int j=1;j<=nl;j++){
         l=file.readLine();
     }
     //l=file.readLine();

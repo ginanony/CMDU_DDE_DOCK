@@ -12,7 +12,7 @@ MyPlugin::MyPlugin(QObject *parent) :
     m_refershTimer(new QTimer(this))
 {
     QLabel *label = (QLabel *)m_mainWidget;
-    label->setText("↑000.00 B/s\n↓000.00 B/s");
+    label->setText("↑0.00 B/s\n↓0.00 B/s");
     label->setStyleSheet("color:white;padding:0px;");
     //label->setAlignment(Qt::AlignRight);
     label->setFixedWidth(75);
@@ -232,12 +232,13 @@ void MyPlugin::updateString()
 
     file.setFileName("/proc/net/dev");
     file.open(QIODevice::ReadOnly);
-    for(int j=1;j<=nl;j++){
-        l=file.readLine();
-    }
-    //l=file.readLine();
-    //l=file.readLine();
-    //l=file.readLine();
+//    for(int j=1;j<=nl;j++){
+//        l=file.readLine();
+//    }
+    l=file.readLine();
+    l=file.readLine();
+    l=file.readLine();
+    if(l.contains("lo",Qt::CaseInsensitive))l=file.readLine();
     file.close();
     QStringList list=l.split(QRegExp("\\s{1,}")); // 第一个\表示转义字符，\s表示空格，｛1，｝表示一个以上
     QString dss="";

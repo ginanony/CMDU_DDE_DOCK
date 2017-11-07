@@ -2,15 +2,16 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QInputDialog>
-#define MYPLUGIN_KEY    "myplugin"
-long int i=0,db,ub,tt0=0,idle0=0;
-int nl=3;
+#define MYPLUGIN_KEY    "CMDUplugin"
+
 MyPlugin::MyPlugin(QObject *parent) :
     QObject(parent),
     m_mainWidget(new PluginWidget),
     m_tipsLabel(new QLabel),
     m_refershTimer(new QTimer(this))
 {
+    i=0,db=0,ub=0,tt0=0,idle0=0;
+    nl=3;
     QLabel *label = (QLabel *)m_mainWidget;
     label->setText("↑0.00 B/s\n↓0.00 B/s");
     label->setStyleSheet("color:white;padding:0px;");
@@ -27,7 +28,7 @@ MyPlugin::MyPlugin(QObject *parent) :
 //插件名
 const QString MyPlugin::pluginName() const
 {
-    return "myplugin";
+    return "CMDUplugin";
 }
 
 //插件初始化
@@ -91,7 +92,7 @@ void MyPlugin::setNetLine()
 //点击响应
 const QString MyPlugin::itemCommand(const QString &itemKey)
 {
-    //Q_UNUSED(itemKey);
+    Q_UNUSED(itemKey);
     MBAbout();
     return "";
 }

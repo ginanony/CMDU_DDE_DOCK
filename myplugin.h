@@ -20,13 +20,13 @@ public:
     MyPlugin(QObject *parent = 0);
 
     //Dock接口函数
-    const QString pluginName() const;
-    void init(PluginProxyInterface *proxyInter);
-    QWidget *itemWidget(const QString &itemKey);    
-    QWidget *itemTipsWidget(const QString &itemKey);
+    const QString pluginName() const override;
+    void init(PluginProxyInterface *proxyInter) override;
+    QWidget *itemWidget(const QString &itemKey) override;
+    QWidget *itemTipsWidget(const QString &itemKey) override;
     const QString itemCommand(const QString &itemKey) override;
     const QString itemContextMenu(const QString &itemKey) override;
-    void invokedMenuItem(const QString &itemKey, const QString &menuId, const bool checked);
+    void invokedMenuItem(const QString &itemKey, const QString &menuId, const bool checked) override;
 
 
 private slots:
@@ -34,6 +34,8 @@ private slots:
     void requestContextMenu(const QString &itemKey);
 
 private:
+    long int i=0,db,ub,tt0=0,idle0=0;
+    int nl;
     PluginWidget *m_mainWidget;
     QLabel *m_tipsLabel;
     QTimer *m_refershTimer;

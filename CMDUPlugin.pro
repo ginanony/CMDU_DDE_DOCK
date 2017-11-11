@@ -15,7 +15,8 @@ SOURCES += myplugin.cpp \
 
 HEADERS += myplugin.h \
     pluginwidget.h
-DISTFILES += MyPlugin.json
+DISTFILES += \
+    CMDUPlugin.json
 
 INCLUDEPATH += ../dde-dock/
 
@@ -25,4 +26,4 @@ unix {
 }
 
 RESOURCES += \
-    filename.qrc
+    res.qrc

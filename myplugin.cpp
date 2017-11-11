@@ -2,6 +2,9 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QApplication>
+#include <QDesktopWidget>
+
 #define MYPLUGIN_KEY    "CMDUplugin"
 
 MyPlugin::MyPlugin(QObject *parent) :
@@ -14,15 +17,39 @@ MyPlugin::MyPlugin(QObject *parent) :
     nl=3;
     QLabel *label = (QLabel *)m_mainWidget;
     label->setText("↑0.00 B/s\n↓0.00 B/s");
-    label->setStyleSheet("color:white;padding:0px;");
+    label->setStyleSheet("color:white; padding:0px;");
     //label->setAlignment(Qt::AlignRight);
     label->setFixedWidth(75);
-    m_tipsLabel->setStyleSheet("color:white;padding:5px;");
+    m_tipsLabel->setStyleSheet("color:white; padding:5px;");
     m_refershTimer->setInterval(1000);
     m_refershTimer->start();
     connect(m_refershTimer, &QTimer::timeout, this, &MyPlugin::updateString);
     connect(m_mainWidget, &PluginWidget::requestContextMenu, this, &MyPlugin::requestContextMenu);
 
+    // 开机时长
+    QProcess *process = new QProcess;
+    process->start("systemd-analyze");
+    process->waitForFinished();
+    QString PO = process->readAllStandardOutput();
+    QStringList SLSA = PO.split(" = ");
+    QString SD = SLSA.at(1);
+    //QString minute = PO.mid(PO.indexOf("= "),PO.indexOf("min"));
+    //QString second =
+    //qDebug() << scodec;
+    if(SD.contains("min"))SD.replace("min","分");
+    labelStartupDuration = new QLabel;
+    labelStartupDuration->setText(SD.mid(0,SD.indexOf(".")) + "秒");
+    labelStartupDuration->setFixedSize(QSize(200,150));
+    labelStartupDuration->setWindowFlags(Qt::FramelessWindowHint | Qt::X11BypassWindowManagerHint);
+    QFont font;
+    font.setPointSize(30);
+    labelStartupDuration->setFont(font);
+    labelStartupDuration->setAlignment(Qt::AlignCenter);
+    labelStartupDuration->setStyleSheet("QLabel { padding:2px; color:white; background-color:#00FF00;}");
+    labelStartupDuration->adjustSize();
+    labelStartupDuration->move(QApplication::desktop()->width()-labelStartupDuration->width()-10, QApplication::desktop()->height()-labelStartupDuration->height()-50);
+    labelStartupDuration->show();
+    QTimer::singleShot(5000, labelStartupDuration, SLOT(hide()));
 }
 
 //插件名
@@ -58,14 +85,14 @@ QWidget *MyPlugin::itemTipsWidget(const QString &itemKey)
 
 void MBAbout()
 {
-    QMessageBox aboutMB(QMessageBox::NoIcon, "系统信息 2.3", "关于\n\n深度Linux系统上一款在任务栏显示网速，鼠标悬浮显示开机时间、CPU占用、内存占用、下载字节、上传字节的插件。\n作者：黄颖\nE-mail: sonichy@163.com\n主页：sonichy.96.lt\n致谢：\nlinux028@deepin.org");
+    QMessageBox aboutMB(QMessageBox::NoIcon, "系统信息 2.4", "关于\n\n深度Linux系统上一款在任务栏显示网速，鼠标悬浮显示开机时间、CPU占用、内存占用、下载字节、上传字节的插件。\n作者：黄颖\nE-mail: sonichy@163.com\n主页：sonichy.96.lt\n致谢：\nlinux028@deepin.org");
     aboutMB.setIconPixmap(QPixmap(":/icon.png"));
     aboutMB.exec();
 }
 
 void MBHistory()
 {
-    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.3", "更新历史\n\n2.3 (2017-09-05)\n自动判断网速所在行。\n\n2.２ (2017-07-08)\n1.设置网速所在行。\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
+    QMessageBox historyMB(QMessageBox::NoIcon, "系统信息 2.4", "更新历史\n\n2.4 (2017-11-11)\n增加开机时间。\n2.3 (2017-09-05)\n自动判断网速所在行。\n\n2.２ (2017-07-08)\n1.设置网速所在行。\n\n2.1 (2017-02-01)\n1.上传下载增加GB单位换算，且参数int改long，修复字节单位换算溢出BUG。\n\n2.0 (2016-12-07)\n1.增加右键菜单。\n\n1.0 (2016-11-01)\n1.把做好的Qt程序移植到DDE-DOCK。");
     historyMB.exec();
 }
 
@@ -77,7 +104,7 @@ void MyPlugin::setNetLine()
     QTextStream TS(&file1);
     while(!TS.atEnd()){
         QString line = TS.readLine();
-        QMessageBox MB(QMessageBox::NoIcon, "系统信息 2.２", line);
+        QMessageBox MB(QMessageBox::NoIcon, "系统信息 2.4", line);
         MB.exec();
         ntl++;
     }
@@ -93,7 +120,9 @@ void MyPlugin::setNetLine()
 const QString MyPlugin::itemCommand(const QString &itemKey)
 {
     Q_UNUSED(itemKey);
-    MBAbout();
+    //MBAbout();
+    labelStartupDuration->show();
+    QTimer::singleShot(5000, labelStartupDuration, SLOT(hide()));
     return "";
 }
 
@@ -156,7 +185,8 @@ void MyPlugin::requestContextMenu(const QString &itemKey)
     m_proxyInter->requestContextMenu(this, itemKey);
 }
 
-QString KB(long k){
+QString MyPlugin::KB(long k)
+{
     QString s="";
     if(k>999999){
         s=QString::number(k/(1024*1024.0),'f',2)+"GB";
@@ -170,7 +200,8 @@ QString KB(long k){
     return s;
 }
 
-QString BS(long b){
+QString MyPlugin::BS(long b)
+{
     QString s="";
     if(b>999999999){
         s=QString::number(b/(1024*1024*1024.0),'f',2)+"GB";
@@ -253,7 +284,7 @@ void MyPlugin::updateString()
     db=list.at(1).toLong();
     ub=list.at(9).toLong();
     QString net="\n下载: "+BS(db)+"  "+dss+"\n上传: "+BS(ub)+"  "+uss;
-    m_tipsLabel->setText(uptime+cusage+mem+net);
+    m_tipsLabel->setText(uptime + cusage + mem + net);
     label->setText("↑"+uss+"\n↓"+dss);
 
     i++;
